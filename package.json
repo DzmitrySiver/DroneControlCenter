@@ -1,0 +1,23 @@
+{
+  "name": "spacedronecontrol_dzmitrysiver",
+  "version": "1.0.0",
+  "description": "space drone control center",
+  "main": "index.js",
+  "dependencies": {
+    "phaser": "^2.6.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DzmitrySiver/DroneControlCenter.git"
+  },
+  "author": "Dzmitry Siver",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DzmitrySiver/DroneControlCenter/issues"
+  },
+  "homepage": "https://github.com/DzmitrySiver/DroneControlCenter#readme"
+}
