@@ -4,10 +4,15 @@
 
 window.onload = function () {
 
-    var game = new Phaser.Game(1000, 800, Phaser.AUTO, 'game-wrapper', {preload: preload, create: create, update: update, render: render});
+    var game = new Phaser.Game(1000, 800, Phaser.AUTO, 'game-wrapper', {
+        preload: preload,
+        create: create,
+        update: update,
+        render: render
+    });
 
     var drone,
-        movementThrust = 200,
+        movementThrust = 300,
         rotationThrust = 0.03;
 
     function preload() {
@@ -23,6 +28,7 @@ window.onload = function () {
          */
         game.world.setBounds(0, 0, 5000, 5000);
         game.physics.startSystem(Phaser.Physics.P2JS);
+        game.time.advancedTiming = true;
 
         /**
          * creating drone
@@ -31,8 +37,8 @@ window.onload = function () {
         drone.anchor.setTo(0.5, 0.5);
         game.physics.p2.enable(drone);
         drone.body.collideWorldBounds = true;
-        drone.body.angularDamping = 0.5;
-        drone.body.damping = 0.5;
+        drone.body.angularDamping = 0.1;
+        drone.body.damping = 0.1;
 
         /**
          * creating camera
@@ -50,44 +56,70 @@ window.onload = function () {
         ]);
     }
 
+    function stabilizeDrone() {
+        var velocityX = drone.body.velocity.x,
+            velocityY = drone.body.velocity.y,
+            velocityAngular = drone.body.angularVelocity,
+            stabilizationVelocity = 2;
+
+        if (Math.abs(velocityAngular) < rotationThrust ) {
+            drone.body.angularVelocity = 0;
+        } else {
+            if (velocityAngular > 0) {
+                drone.body.angularVelocity -= rotationThrust;
+            } else if (velocityAngular < 0) {
+                drone.body.angularVelocity += rotationThrust;
+            }
+        }
+
+        // TODO: Damping velocity based on X/Y coords causes incorrect body positioning;
+        // TODO: Create complex damping function based on body angle and using only Trhust() functions.
+        // Velocity X
+        if (Math.abs(velocityX) < stabilizationVelocity ) {
+            drone.body.velocity.x = 0;
+        } else {
+            if (velocityX > 0) {
+                drone.body.velocity.x -= stabilizationVelocity;
+            } else if (velocityX < 0) {
+                drone.body.velocity.x += stabilizationVelocity;
+            }
+        }
+
+        // Velocity Y
+        if (Math.abs(velocityY) < stabilizationVelocity ) {
+            drone.body.velocity.y = 0;
+        } else {
+            if (drone.body.velocity.y > 0) {
+                drone.body.velocity.y -= stabilizationVelocity;
+            } else if (drone.body.velocity.y < 0) {
+                drone.body.velocity.y += stabilizationVelocity;
+            }
+        }
+    }
+
     function update() {
 
-        // Check key states every frame.
-        // Move ONLY one of the left and right key is hold.
-        if (game.input.keyboard.isDown(Phaser.Keyboard.LEFT))
-        {
+        if (game.input.keyboard.isDown(Phaser.Keyboard.Q)) {
             drone.body.angularVelocity -= rotationThrust;
         }
-        else if (game.input.keyboard.isDown(Phaser.Keyboard.RIGHT))
-        {
+        else if (game.input.keyboard.isDown(Phaser.Keyboard.E)) {
             drone.body.angularVelocity += rotationThrust;
         }
-        else if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
-            if (drone.body.angularVelocity > 0) {
-                drone.body.angularVelocity -= 0.01;
-            } else {
-                drone.body.angularVelocity += 0.01;
-            }
 
-            if (drone.body.velocity.x > 0) {
-                drone.body.velocity.x -= 0.5;
-            } else {
-                drone.body.velocity.x += 0.5;
-            }
-
-            if (drone.body.velocity.y > 0) {
-                drone.body.velocity.y -= 0.5;
-            } else {
-                drone.body.velocity.y += 0.5;
-            }
-
-
+        if (game.input.keyboard.isDown(Phaser.Keyboard.A)) {
+            drone.body.thrustLeft(movementThrust);
+        } else if (game.input.keyboard.isDown(Phaser.Keyboard.D)) {
+            drone.body.thrustRight(movementThrust);
         }
 
-        if (game.input.keyboard.isDown(Phaser.Keyboard.UP)) {
+        if (game.input.keyboard.isDown(Phaser.Keyboard.W)) {
             drone.body.thrust(movementThrust);
-        } else if (game.input.keyboard.isDown(Phaser.Keyboard.DOWN)) {
+        } else if (game.input.keyboard.isDown(Phaser.Keyboard.S)) {
             drone.body.thrust(-movementThrust);
+        }
+
+        if (game.input.keyboard.isDown(Phaser.Keyboard.SPACEBAR)) {
+            stabilizeDrone();
         }
     }
 
@@ -95,8 +127,9 @@ window.onload = function () {
 
         // Camera
         game.debug.cameraInfo(game.camera, 32, 32);
-        game.debug.spriteInfo(drone, 32, 500);
-        game.debug.text(drone.body.velocity.x, 600, 32);
+        game.debug.spriteInfo(drone, 32, 700);
+        game.debug.text(drone.body.velocity.x || '--', 800, 32, "#00ff00");
+        game.debug.text(game.time.fps || '--', 800, 700, "#00ff00");
 
     }
 
